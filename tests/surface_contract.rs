@@ -43,7 +43,13 @@ fn mounted_hierarchy_is_live_and_cycle_safe() {
     assert_eq!(child.parent_id, None);
     surface.set_parent("leaf", None).unwrap();
     assert_eq!(
-        surface.inspect().unwrap().into_iter().find(|component| component.id == "leaf").unwrap().parent_id,
+        surface
+            .inspect()
+            .unwrap()
+            .into_iter()
+            .find(|component| component.id == "leaf")
+            .unwrap()
+            .parent_id,
         None
     );
     assert_eq!(
@@ -56,22 +62,36 @@ fn mounted_hierarchy_is_live_and_cycle_safe() {
 fn disabled_hidden_readonly_controls_fail_closed() {
     let mut surface = Surface::default();
     mount(&mut surface, "root", None, &[Control::Click]);
-    mount(&mut surface, "field", Some("root"), &[Control::Input, Control::Change]);
-    surface.update_availability("root", false, true, false).unwrap();
+    mount(
+        &mut surface,
+        "field",
+        Some("root"),
+        &[Control::Input, Control::Change],
+    );
+    surface
+        .update_availability("root", false, true, false)
+        .unwrap();
     assert_eq!(
         surface.invoke("field", Control::Input, Value::Text("edited".to_owned())),
         Err(SurfaceError::Unavailable("field".to_owned()))
     );
-    surface.update_availability("root", true, false, false).unwrap();
-    assert!(!surface
+    surface
+        .update_availability("root", true, false, false)
+        .unwrap();
+    assert!(
+        !surface
         .inspect()
         .unwrap()
         .into_iter()
         .find(|item| item.id == "field")
         .unwrap()
         .enabled);
-    surface.update_availability("root", true, true, false).unwrap();
-    surface.update_availability("field", true, true, true).unwrap();
+    surface
+        .update_availability("root", true, true, false)
+        .unwrap();
+    surface
+        .update_availability("field", true, true, true)
+        .unwrap();
     assert_eq!(
         surface.invoke("field", Control::Change, Value::Bool(true)),
         Err(SurfaceError::Unavailable("field".to_owned()))
@@ -86,8 +106,12 @@ fn disabled_hidden_readonly_controls_fail_closed() {
             .controls
             .is_empty()
     );
-    surface.update_availability("field", true, true, false).unwrap();
-    assert!(surface.invoke("field", Control::Change, Value::Bool(true)).is_ok());
+    surface
+        .update_availability("field", true, true, false)
+        .unwrap();
+    assert!(surface
+        .invoke("field", Control::Change, Value::Bool(true))
+        .is_ok());
     assert_eq!(
         surface.invoke("field", Control::Input, Value::None),
         Err(SurfaceError::InvalidPayload)
@@ -111,9 +135,15 @@ fn invocation_calls_real_application_handler_and_propagates_errors() {
             },
         )
         .unwrap();
-    surface.invoke("submit", Control::Click, Value::None).unwrap();
     surface
-        .invoke("submit", Control::Change, Value::Text("accepted".to_owned()))
+        .invoke("submit", Control::Click, Value::None)
+        .unwrap();
+    surface
+        .invoke(
+            "submit",
+            Control::Change,
+            Value::Text("accepted".to_owned()),
+        )
         .unwrap();
     assert_eq!(
         surface.invoke("submit", Control::Change, Value::Text("reject".to_owned())),
@@ -148,7 +178,10 @@ fn duplicate_and_invalid_mounts_are_rejected() {
     ));
     assert_eq!(
         surface.mount(
-            Descriptor { parent_id: Some("absent".to_owned()), ..Descriptor::new("child", [Control::Click]) },
+            Descriptor {
+                parent_id: Some("absent".to_owned()),
+                ..Descriptor::new("child", [Control::Click])
+            },
             |_, _| Ok(())
         ),
         Err(SurfaceError::Unknown("absent".to_owned()))
