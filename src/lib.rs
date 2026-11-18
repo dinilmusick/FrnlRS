@@ -129,16 +129,16 @@ impl Surface {
         if !self.mounted.contains_key(id) {
             return Err(SurfaceError::Unknown(id.to_owned()));
         }
-        let mut cursor = parent;
+        let mut cursor = parent.map(str::to_owned);
         while let Some(current) = cursor {
             if current == id {
                 return Err(SurfaceError::Cycle(id.to_owned()));
             }
             let ancestor = self
                 .mounted
-                .get(current)
-                .ok_or_else(|| SurfaceError::Unknown(current.to_owned()))?;
-            cursor = ancestor.descriptor.parent_id.as_deref();
+                .get(&current)
+                .ok_or_else(|| SurfaceError::Unknown(current.clone()))?;
+            cursor = ancestor.descriptor.parent_id.clone();
         }
         if let Some(component) = self.mounted.get_mut(id) {
             component.descriptor.parent_id = parent.map(str::to_owned);
@@ -165,20 +165,20 @@ impl Surface {
     }
 
     fn effective(&self, id: &str) -> Result<(bool, bool), SurfaceError> {
-        let mut cursor = Some(id);
+        let mut cursor = Some(id.to_owned());
         let mut seen = BTreeSet::new();
         let (mut visible, mut enabled) = (true, true);
         while let Some(current) = cursor {
-            if !seen.insert(current) {
+            if !seen.insert(current.clone()) {
                 return Err(SurfaceError::Cycle(id.to_owned()));
             }
             let component = self
                 .mounted
-                .get(current)
-                .ok_or_else(|| SurfaceError::Unknown(current.to_owned()))?;
+                .get(&current)
+                .ok_or_else(|| SurfaceError::Unknown(current.clone()))?;
             visible &= component.descriptor.visible;
             enabled &= component.descriptor.enabled;
-            cursor = component.descriptor.parent_id.as_deref();
+            cursor = component.descriptor.parent_id.clone();
         }
         Ok((visible, enabled))
     }
