@@ -2,6 +2,8 @@
 
 Runtime-neutral Rust semantic frontend and programmatic UI surface for ULTRST applications.
 
+See [the pinned upstream export and gap inventory](docs/PARITY.md).
+
 ## Upstream and parity scope
 
 - Canonical upstream: [FrnlTS](https://github.com/dinilmusick/FrnlTS), pinned main commit `6c8cc81e7304e478e51e0810160eab2969fb0636`.
