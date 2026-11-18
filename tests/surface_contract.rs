@@ -80,12 +80,13 @@ fn disabled_hidden_readonly_controls_fail_closed() {
         .unwrap();
     assert!(
         !surface
-        .inspect()
-        .unwrap()
-        .into_iter()
-        .find(|item| item.id == "field")
-        .unwrap()
-        .enabled);
+            .inspect()
+            .unwrap()
+            .into_iter()
+            .find(|item| item.id == "field")
+            .unwrap()
+            .enabled
+    );
     surface
         .update_availability("root", true, true, false)
         .unwrap();
@@ -96,16 +97,14 @@ fn disabled_hidden_readonly_controls_fail_closed() {
         surface.invoke("field", Control::Change, Value::Bool(true)),
         Err(SurfaceError::Unavailable("field".to_owned()))
     );
-    assert!(
-        surface
-            .inspect()
-            .unwrap()
-            .into_iter()
-            .find(|item| item.id == "field")
-            .unwrap()
-            .controls
-            .is_empty()
-    );
+    assert!(surface
+        .inspect()
+        .unwrap()
+        .into_iter()
+        .find(|item| item.id == "field")
+        .unwrap()
+        .controls
+        .is_empty());
     surface
         .update_availability("field", true, true, false)
         .unwrap();
