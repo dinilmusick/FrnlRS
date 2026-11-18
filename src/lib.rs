@@ -194,9 +194,7 @@ impl Surface {
                     desc.controls
                         .iter()
                         .copied()
-                        .filter(|control| {
-                            !desc.read_only || matches!(control, Control::Click)
-                        })
+                        .filter(|control| !desc.read_only || matches!(control, Control::Click))
                         .collect()
                 } else {
                     Vec::new()
@@ -225,7 +223,9 @@ impl Surface {
             .mounted
             .get_mut(id)
             .ok_or_else(|| SurfaceError::Unknown(id.to_owned()))?;
-        if !visible || !enabled || !node.descriptor.controls.contains(&control)
+        if !visible
+            || !enabled
+            || !node.descriptor.controls.contains(&control)
             || (node.descriptor.read_only && control != Control::Click)
         {
             return Err(SurfaceError::Unavailable(id.to_owned()));
