@@ -9,7 +9,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ui.mount(
         Descriptor::new("native.submit", [Control::Click]),
         move |control, value| {
-            destination.lock().expect("event lock").push((control, value.clone()));
+            destination
+                .lock()
+                .expect("event lock")
+                .push((control, value.clone()));
             Ok(())
         },
     )?;
