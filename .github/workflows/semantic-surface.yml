@@ -17,5 +17,7 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Verify semantic UI contracts
         run: cargo test --all-targets
+      - name: Verify native consumer integration
+        run: cargo run --example native_consumer
       - name: Enforce idiomatic Rust warnings
         run: cargo clippy --all-targets -- -D warnings
