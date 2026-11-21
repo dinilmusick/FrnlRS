@@ -1,20 +1,40 @@
 # FrnlRS
 
-Runtime-neutral Rust semantic frontend and programmatic UI surface for ULTRST applications.
+Portable, headless semantic frontend runtime in Rust, built from pinned FrnlTS contracts.
+**No React implementation or built-in renderer.** Native applications and other hosts
+supply the window, event source, clock, persistence and optional model inference.
 
-See [the pinned upstream export and gap inventory](docs/PARITY.md).
+- **Semantic engine**: `frnlrs::semantic::Runtime` — state definitions and transitions,
+  state-specific event handlers, deterministic queued events, subscriptions, phase timing,
+  interpolated curves, themes, flows, scoped context/data, reusable functions and libraries,
+  and stable renderer snapshots.
+- **Mounted control surface**: `frnlrs::Surface` — an independent compatibility API for
+  live native control availability, hierarchy and real control callbacks, preserved from PR #1.
+- **Adapters**: host-defined `Renderer`, `Clock`, `EventSource`, `Storage`,
+  `ExternalIo`, and `ModelAdapter` traits. Missing optional adapters return errors,
+  not fake successful actions.
 
-## Upstream and parity scope
+Canonical FrnlTS: `a9339b9e92f9ef375ac164e274842644dca60d8a`.
+Native foundation reviewed: GutRS `3e4ad1823166b37ddc437aab04277b42c124ce36`.
+No direct GutRS binding is required: its optional interfaces remain unverified at this revision.
 
-- Canonical upstream: [FrnlTS](https://github.com/dinilmusick/FrnlTS), pinned main commit `6c8cc81e7304e478e51e0810160eab2969fb0636`.
-- Browser/PHP behavioral reference: [FrnlWP](https://github.com/dinilmusick/FrnlWP), whose UI surface exposes mounted components, ancestor visibility and enabled state, accessible controls and real event paths.
-- Initial port: live component registry, hierarchy/cycle enforcement, snapshots, inherited visibility and enabled state, read-only semantics, typed input/click/change dispatch, and application-injected native event callbacks.
-- Never spawns agents, synthesizes callbacks or claims an unavailable control executed.
+The [current parity matrix](docs/PARITY.md) and [semantic contract / adapter
+reference](docs/SEMANTIC_PARITY.md) distinguish implemented headless functionality
+from platform-specific features deliberately left for later integration.
+
+## Verify
 
 ```bash
 cargo fmt --all -- --check
 cargo test --all-targets
+cargo run --example native_consumer
+cargo run --example semantic_consumer
 cargo clippy --all-targets -- -D warnings
+rustup target add wasm32-wasip1
+cargo check --target wasm32-wasip1
 ```
 
-The native renderer is supplied by the consuming application. Mount/unmount, availability updates and event handlers must be connected to its **real** UI framework; this crate does not render controls or connect to a browser. Complete FrnlTS parity (DOM geometry, framework subscriptions, focus, screen-reader semantics, layout, event transport and published package adoption) is not claimed. No application integration or native platform smoke test is yet verified.
+Both examples run real crate APIs and verify callback / state behavior without opening
+a native window. **Neither example certifies a desktop, embedded display, operating-system
+UI, browser integration, accessibility adapter or deployed application.** The core currently
+requires `std`; `no_std`/`alloc` support and direct GutRS integration remain future work.

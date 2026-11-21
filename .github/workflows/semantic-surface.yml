@@ -21,5 +21,9 @@ jobs:
         run: cargo run --example native_consumer
       - name: Verify headless semantic consumer
         run: cargo run --example semantic_consumer
+      - name: Compile portable WASI target
+        run: |
+          rustup target add wasm32-wasip1
+          cargo check --target wasm32-wasip1
       - name: Enforce idiomatic Rust warnings
         run: cargo clippy --all-targets -- -D warnings
