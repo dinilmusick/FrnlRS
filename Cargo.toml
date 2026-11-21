@@ -5,4 +5,8 @@ edition = "2021"
 license = "MIT"
 description = "Runtime-neutral semantic frontend surface for native ULTRST applications"
 
+[features]
+default = ["std"]
+std = []
+
 [dependencies]

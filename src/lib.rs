@@ -1,8 +1,20 @@
 //! Runtime-neutral semantic frontend state and control invocation.
 //! Applications supply their own real renderer/event callbacks; this crate never renders,
 //! fabricates a UI event, or makes an inaccessible control callable.
+//!
+//! With default features disabled the semantic runtime uses only core + alloc.
 
-use std::collections::{BTreeMap, BTreeSet};
+#![cfg_attr(not(feature = "std"), no_std)]
+#![forbid(unsafe_code)]
+
+extern crate alloc;
+
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Control {
@@ -29,13 +41,27 @@ pub enum SurfaceError {
     Handler(String),
 }
 
-impl std::fmt::Display for SurfaceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
+impl SurfaceError {
+    /// Stable error code for native control adapters and logs.
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::EmptyId => "FRNL_SURFACE_EMPTY_ID",
+            Self::Duplicate(_) => "FRNL_SURFACE_DUPLICATE",
+            Self::Unknown(_) => "FRNL_SURFACE_UNKNOWN",
+            Self::Cycle(_) => "FRNL_SURFACE_CYCLE",
+            Self::Unavailable(_) => "FRNL_SURFACE_UNAVAILABLE",
+            Self::InvalidPayload => "FRNL_SURFACE_INVALID_PAYLOAD",
+            Self::Handler(_) => "FRNL_SURFACE_HANDLER",
+        }
+    }
+}
+impl fmt::Display for SurfaceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}: {self:?}", self.code())
     }
 }
 
-impl std::error::Error for SurfaceError {}
+impl core::error::Error for SurfaceError {}
 
 #[derive(Clone, Debug)]
 pub struct Descriptor {

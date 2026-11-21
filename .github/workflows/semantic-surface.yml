@@ -14,7 +14,9 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: Check formatting
-        run: cargo fmt --all -- --check
+        run: |
+          cargo fmt --all -- --check
+          cargo fmt --manifest-path examples/external-consumer/Cargo.toml -- --check
       - name: Verify semantic UI contracts
         run: cargo test --all-targets
       - name: Verify original native consumer
@@ -25,5 +27,15 @@ jobs:
         run: |
           rustup target add wasm32-wasip1
           cargo check --target wasm32-wasip1
+      - name: Compile alloc-only bare-metal target
+        run: |
+          rustup target add thumbv7em-none-eabi
+          cargo check --lib --no-default-features --target thumbv7em-none-eabi
+      - name: Test default-disabled native consumer
+        run: |
+          cargo test --no-default-features --all-targets
+          cargo run --manifest-path examples/external-consumer/Cargo.toml
       - name: Enforce idiomatic Rust warnings
-        run: cargo clippy --all-targets -- -D warnings
+        run: |
+          cargo clippy --all-targets -- -D warnings
+          cargo clippy --no-default-features --lib -- -D warnings

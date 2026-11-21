@@ -2,8 +2,7 @@
 
 Canonical: FrnlTS at a9339b9e92f9ef375ac164e274842644dca60d8a.
 Native utility reference: GutRS at 3e4ad1823166b37ddc437aab04277b42c124ce36.
-This crate is std-only and uses no unstable GutRS bindings. Rust renderers, embedded
-targets, and bare-metal adapters may use the public semantic types without React.
+This crate compiles with `alloc`/`no_std` without pulling in GutRS. A native host supplies its allocator, clock, events and renderer; it does not recreate React.
 The pre-existing Surface remains available for actual mounted native control gating.
 
 | FrnlTS contract | Rust contract | Executable evidence |
@@ -35,6 +34,5 @@ Runtime invariants:
 
 Limitations: no real desktop window, platform accessibility, focus/geometry adapter,
 React interoperability or arbitrary Zod validation. Host-provided ModelAdapter is
-responsible for candidate inference. The headless engine uses the standard library:
-no_std/alloc and compiled GutRS linkage remain future portability work. No real
+responsible for candidate inference. The headless engine compiles on bare-metal `thumbv7em-none-eabi` using `alloc` when default features are disabled. The host must supply a global allocator for final embedded linkage; direct GutRS linking remains an optional host concern. No real
 native OS-level UI integration is claimed by the executable demonstration.

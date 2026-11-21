@@ -21,12 +21,12 @@ FrnlRS deliberately ports semantic machinery, **not React**.
 | Native host clock/input/storage/external I/O | `Clock`, `EventSource`, `Storage`, `ExternalIo` | Executable mock-host integration and explicit failure paths |
 | DOM/React hooks/accessibility/focus/geometry | **Not implemented** | Must live in native renderer or future platform adapter |
 | Arbitrary JS/Zod validation and browser UI session | **Not implemented** | Domain-specific validators/auth must be host-supplied |
-| No-std embedded/bare metal | **Not implemented** | `std`-dependent core; WASI cross-check for portability |
+| Alloc-only bare-metal and WASI | **Implemented** | `--no-default-features` compiles on `thumbv7em-none-eabi`; default feature on WASI |
 | Full direct GutRS linkage | **Not implemented** | No unverified dependency forced into core |
 
 Tests: `tests/surface_contract.rs`, `tests/semantic_contract.rs`,
 `fixtures/frnlts-phases.tsv`, and the `native_consumer` /
-`semantic_consumer` runnable examples.
+`semantic_consumer` runnable examples plus the standalone `external-consumer` Cargo crate.
 
 The fixture derives from FrnlTS pinned phase *contracts*. It is not a claim that
 TypeScript and Rust were co-executed on automatically generated fixtures.

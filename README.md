@@ -10,13 +10,14 @@ supply the window, event source, clock, persistence and optional model inference
   and stable renderer snapshots.
 - **Mounted control surface**: `frnlrs::Surface` — an independent compatibility API for
   live native control availability, hierarchy and real control callbacks, preserved from PR #1.
+- **Diagnostics**: stable `Error::code()` / `SurfaceError::code()` identifiers with explicit failure messages.
 - **Adapters**: host-defined `Renderer`, `Clock`, `EventSource`, `Storage`,
   `ExternalIo`, and `ModelAdapter` traits. Missing optional adapters return errors,
   not fake successful actions.
 
 Canonical FrnlTS: `a9339b9e92f9ef375ac164e274842644dca60d8a`.
 Native foundation reviewed: GutRS `3e4ad1823166b37ddc437aab04277b42c124ce36`.
-No direct GutRS binding is required: its optional interfaces remain unverified at this revision.
+No direct GutRS binding is required: the pinned GutRS semantic-input API uses standard-library dependencies and is isolated behind the FrnlRS host adapter trait.
 
 The [current parity matrix](docs/PARITY.md) and [semantic contract / adapter
 reference](docs/SEMANTIC_PARITY.md) distinguish implemented headless functionality
@@ -32,9 +33,11 @@ cargo run --example semantic_consumer
 cargo clippy --all-targets -- -D warnings
 rustup target add wasm32-wasip1
 cargo check --target wasm32-wasip1
+rustup target add thumbv7em-none-eabi
+cargo check --lib --no-default-features --target thumbv7em-none-eabi
+cargo run --manifest-path examples/external-consumer/Cargo.toml
 ```
 
 Both examples run real crate APIs and verify callback / state behavior without opening
 a native window. **Neither example certifies a desktop, embedded display, operating-system
-UI, browser integration, accessibility adapter or deployed application.** The core currently
-requires `std`; `no_std`/`alloc` support and direct GutRS integration remain future work.
+UI, browser integration, accessibility adapter or deployed application.** The core compiles with `no_std` + `alloc` when default features are disabled, but embedded hosts must provide a global allocator before final linking. See [portability](docs/PORTABILITY.md).
