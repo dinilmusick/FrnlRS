@@ -462,9 +462,10 @@ impl Runtime {
                 for visual in visuals.values() { visual.validate()?; }
             }
         }
-        if self.themes.insert(name.into(), theme).is_some() {
+        if self.themes.contains_key(name) {
             return Err(Error::Duplicate(name.into()));
         }
+        self.themes.insert(name.into(), theme);
         Ok(())
     }
 
@@ -655,16 +656,19 @@ impl Runtime {
                 let e = self.entity(&id)?;
                 (e.phase, e.phase_started_ms, e.pending_state.clone())
             };
-            let durations = &self.state_definition(&id)?.phases;
+            let (attack_ms, release_ms) = {
+                let phases = &self.state_definition(&id)?.phases;
+                (phases.attack_ms.unwrap_or(0), phases.release_ms.unwrap_or(0))
+            };
             match phase {
-                Phase::Attack if now.saturating_sub(started) >= durations.attack_ms.unwrap_or(0) => {
+                Phase::Attack if now.saturating_sub(started) >= attack_ms => {
                     self.entities.get_mut(&id).expect("validated entity").phase = Phase::Sustain;
                     self.entities.get_mut(&id).expect("validated entity").phase_started_ms =
-                        started.saturating_add(durations.attack_ms.unwrap_or(0));
+                        started.saturating_add(attack_ms);
                 }
-                Phase::Release if now.saturating_sub(started) >= durations.release_ms.unwrap_or(0) => {
+                Phase::Release if now.saturating_sub(started) >= release_ms => {
                     if let Some(next) = pending {
-                        let at = started.saturating_add(durations.release_ms.unwrap_or(0));
+                        let at = started.saturating_add(release_ms);
                         self.enter_state(&id, &next, at)?;
                         let attack = self.state_definition(&id)?.phases.attack_ms.unwrap_or(0);
                         if now.saturating_sub(at) >= attack {
