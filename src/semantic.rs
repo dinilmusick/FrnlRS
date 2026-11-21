@@ -87,7 +87,9 @@ impl fmt::Display for Error {
             Self::Duplicate(detail) => write!(f, "{}: already registered: {detail}", self.code()),
             Self::Missing(detail) => write!(f, "{}: not registered: {detail}", self.code()),
             Self::WrongState(detail) => write!(f, "{}: invalid state: {detail}", self.code()),
-            Self::WrongPayload(detail) => write!(f, "{}: invalid event data: {detail}", self.code()),
+            Self::WrongPayload(detail) => {
+                write!(f, "{}: invalid event data: {detail}", self.code())
+            }
             Self::Cycle(detail) => write!(f, "{}: cyclic dependency: {detail}", self.code()),
             Self::Unavailable(detail) => write!(f, "{}: unavailable: {detail}", self.code()),
             Self::Adapter(detail) => write!(f, "{}: missing host adapter: {detail}", self.code()),

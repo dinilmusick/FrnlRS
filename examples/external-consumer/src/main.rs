@@ -84,11 +84,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let calls = Arc::new(Mutex::new(0_u32));
     let counter = Arc::clone(&calls);
     let mut surface = Surface::default();
-    surface.mount(Descriptor::new("submit", [Control::Click]), move |_, payload| {
-        assert_eq!(payload, &Value::None);
-        *counter.lock().expect("counter lock poisoned") += 1;
-        Ok(())
-    })?;
+    surface.mount(
+        Descriptor::new("submit", [Control::Click]),
+        move |_, payload| {
+            assert_eq!(payload, &Value::None);
+            *counter.lock().expect("counter lock poisoned") += 1;
+            Ok(())
+        },
+    )?;
     surface.invoke("submit", Control::Click, Value::None)?;
     assert_eq!(*calls.lock().expect("counter lock poisoned"), 1);
     println!("FrnlRS external no-std-feature consumer: PASS");
