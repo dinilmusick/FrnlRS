@@ -932,13 +932,11 @@ impl Runtime {
     ) -> Result<(), Error> {
         self.entity(component)?;
         nonempty(function)?;
-        if self
-            .handlers
-            .insert((component.into(), function.into()), Box::new(handler))
-            .is_some()
-        {
+        let key = (component.into(), function.into());
+        if self.handlers.contains_key(&key) {
             return Err(Error::Duplicate(format!("{component}.{function}")));
         }
+        self.handlers.insert(key, Box::new(handler));
         Ok(())
     }
     pub fn register_function(
@@ -947,13 +945,10 @@ impl Runtime {
         handler: impl FnMut(&Data, &mut ActionContext) -> Result<Data, Error> + 'static,
     ) -> Result<(), Error> {
         nonempty(name)?;
-        if self
-            .functions
-            .insert(name.into(), Box::new(handler))
-            .is_some()
-        {
+        if self.functions.contains_key(name) {
             return Err(Error::Duplicate(name.into()));
         }
+        self.functions.insert(name.into(), Box::new(handler));
         Ok(())
     }
     pub fn subscribe(
@@ -1032,19 +1027,27 @@ impl Runtime {
         component: &str,
         name: &str,
         payload: &Data,
+        budget: &mut usize,
+        stack: &mut BTreeSet<String>,
     ) -> Result<Data, Error> {
         let state = self.entity(component)?.state.clone();
         let key = (component.into(), name.into());
-        let mut handler = self
-            .handlers
-            .remove(&key)
-            .ok_or_else(|| Error::Missing(format!("handler {component}.{name}")))?;
+        let is_local = self.handlers.contains_key(&key);
+        let mut handler = if is_local {
+            self.handlers.remove(&key)
+        } else {
+            self.functions.remove(name)
+        }
+        .ok_or_else(|| Error::Missing(format!("function {component}.{name}")))?;
         let mut ctx = ActionContext::new(component, &state);
         let result = handler(payload, &mut ctx);
-        self.handlers.insert(key, handler);
+        if is_local {
+            self.handlers.insert(key, handler);
+        } else {
+            self.functions.insert(name.into(), handler);
+        }
         let value = result?;
-        let mut budget = 1024;
-        self.apply_actions(ctx.actions, &mut budget, &mut BTreeSet::new())?;
+        self.apply_actions(ctx.actions, budget, stack)?;
         Ok(value)
     }
     fn run_steps(
@@ -1082,7 +1085,7 @@ impl Runtime {
                     function,
                     payload,
                 } => {
-                    self.call_registered(component, function, payload)?;
+                    self.call_registered(component, function, payload, budget, stack)?;
                 }
                 FlowStep::Flow(name) => self.run_flow_inner(name, stack, budget)?,
                 FlowStep::IfEqual {
@@ -1105,15 +1108,15 @@ impl Runtime {
         stack: &mut BTreeSet<String>,
         budget: &mut usize,
     ) -> Result<(), Error> {
-        if !stack.insert(name.into()) {
-            return Err(Error::Cycle(format!("flow {name}")));
-        }
         let steps = self
             .flows
             .get(name)
             .ok_or_else(|| Error::Missing(name.into()))?
             .steps
             .clone();
+        if !stack.insert(name.into()) {
+            return Err(Error::Cycle(format!("flow {name}")));
+        }
         let result = self.run_steps(&steps, stack, budget);
         stack.remove(name);
         result

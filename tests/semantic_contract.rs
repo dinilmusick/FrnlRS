@@ -449,3 +449,53 @@ fn pinned_cross_language_fixture_phase_contract() {
         assert_eq!(actual, parts[1], "fixture mismatch at timestamp {at}");
     }
 }
+
+#[test]
+fn semantic_function_registry_executes_and_rejects_duplicates_without_overwriting() {
+    let mut r = runtime();
+    r.register_handler("child", "open", |_, _| Ok(Data::Integer(12)))
+        .unwrap();
+    assert!(matches!(
+        r.register_handler("child", "open", |_, _| Ok(Data::Integer(99))),
+        Err(Error::Duplicate(_))
+    ));
+    r.emit("child", "activate", Data::Integer(1)).unwrap();
+    assert_eq!(r.history()[0].result, Data::Integer(12));
+
+    r.register_function("apply", |payload, ctx| {
+        ctx.set_data("value", payload.clone());
+        Ok(payload.clone())
+    })
+    .unwrap();
+    assert!(matches!(
+        r.register_function("apply", |_, _| Ok(Data::Null)),
+        Err(Error::Duplicate(_))
+    ));
+    r.register_flow(Flow {
+        id: "do-apply".into(),
+        steps: vec![FlowStep::Call {
+            component: "child".into(),
+            function: "apply".into(),
+            payload: Data::Integer(42),
+        }],
+    })
+    .unwrap();
+    r.run_flow("do-apply").unwrap();
+    assert_eq!(r.entity("child").unwrap().data["value"], Data::Integer(42));
+
+    r.register_function("recursive-call", |_, ctx| {
+        ctx.flow("indirect-cycle");
+        Ok(Data::Null)
+    })
+    .unwrap();
+    r.register_flow(Flow {
+        id: "indirect-cycle".into(),
+        steps: vec![FlowStep::Call {
+            component: "child".into(),
+            function: "recursive-call".into(),
+            payload: Data::Null,
+        }],
+    })
+    .unwrap();
+    assert!(matches!(r.run_flow("indirect-cycle"), Err(Error::Cycle(_))));
+}
