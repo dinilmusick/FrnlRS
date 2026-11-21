@@ -499,3 +499,14 @@ fn semantic_function_registry_executes_and_rejects_duplicates_without_overwritin
     .unwrap();
     assert!(matches!(r.run_flow("indirect-cycle"), Err(Error::Cycle(_))));
 }
+
+#[test]
+fn stable_error_diagnostics_require_no_host_adapter() {
+    let wrong = Error::WrongPayload("form.submit".into());
+    assert_eq!(wrong.code(), "FRNL_WRONG_PAYLOAD");
+    assert!(wrong.to_string().contains("form.submit"));
+    assert!(Error::LimitExceeded.to_string().contains("budget"));
+    let surface = frnlrs::SurfaceError::InvalidPayload;
+    assert_eq!(surface.code(), "FRNL_SURFACE_INVALID_PAYLOAD");
+    assert!(surface.to_string().contains("FRNL_SURFACE_INVALID_PAYLOAD"));
+}

@@ -62,9 +62,39 @@ pub enum Error {
     LimitExceeded,
 }
 
+impl Error {
+    /// Stable code for host logs, error reporting and embedded diagnostics.
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::Invalid(_) => "FRNL_INVALID",
+            Self::Duplicate(_) => "FRNL_DUPLICATE",
+            Self::Missing(_) => "FRNL_MISSING",
+            Self::WrongState(_) => "FRNL_WRONG_STATE",
+            Self::WrongPayload(_) => "FRNL_WRONG_PAYLOAD",
+            Self::Cycle(_) => "FRNL_CYCLE",
+            Self::Unavailable(_) => "FRNL_UNAVAILABLE",
+            Self::Adapter(_) => "FRNL_ADAPTER",
+            Self::Handler(_) => "FRNL_HANDLER",
+            Self::TimeReversed => "FRNL_TIME_REVERSED",
+            Self::LimitExceeded => "FRNL_LIMIT_EXCEEDED",
+        }
+    }
+}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{self:?}")
+        match self {
+            Self::Invalid(detail) => write!(f, "{}: invalid definition: {detail}", self.code()),
+            Self::Duplicate(detail) => write!(f, "{}: already registered: {detail}", self.code()),
+            Self::Missing(detail) => write!(f, "{}: not registered: {detail}", self.code()),
+            Self::WrongState(detail) => write!(f, "{}: invalid state: {detail}", self.code()),
+            Self::WrongPayload(detail) => write!(f, "{}: invalid event data: {detail}", self.code()),
+            Self::Cycle(detail) => write!(f, "{}: cyclic dependency: {detail}", self.code()),
+            Self::Unavailable(detail) => write!(f, "{}: unavailable: {detail}", self.code()),
+            Self::Adapter(detail) => write!(f, "{}: missing host adapter: {detail}", self.code()),
+            Self::Handler(detail) => write!(f, "{}: handler failed: {detail}", self.code()),
+            Self::TimeReversed => write!(f, "{}: clock moved backward", self.code()),
+            Self::LimitExceeded => write!(f, "{}: execution budget exceeded", self.code()),
+        }
     }
 }
 impl core::error::Error for Error {}

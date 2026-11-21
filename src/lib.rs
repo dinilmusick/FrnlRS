@@ -41,9 +41,23 @@ pub enum SurfaceError {
     Handler(String),
 }
 
+impl SurfaceError {
+    /// Stable error code for native control adapters and logs.
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::EmptyId => "FRNL_SURFACE_EMPTY_ID",
+            Self::Duplicate(_) => "FRNL_SURFACE_DUPLICATE",
+            Self::Unknown(_) => "FRNL_SURFACE_UNKNOWN",
+            Self::Cycle(_) => "FRNL_SURFACE_CYCLE",
+            Self::Unavailable(_) => "FRNL_SURFACE_UNAVAILABLE",
+            Self::InvalidPayload => "FRNL_SURFACE_INVALID_PAYLOAD",
+            Self::Handler(_) => "FRNL_SURFACE_HANDLER",
+        }
+    }
+}
 impl fmt::Display for SurfaceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{self:?}")
+        write!(f, "{}: {self:?}", self.code())
     }
 }
 
