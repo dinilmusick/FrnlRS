@@ -1,0 +1,42 @@
+name: Wave 2 portable rustfmt repair
+on:
+  push:
+    branches:
+      - feat/alloc-no-std-external-consumer-20261121
+permissions:
+  contents: write
+concurrency:
+  group: frnlrs-alloc-formatter
+  cancel-in-progress: false
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Format main crate and external consumer
+        run: |
+          cargo fmt --all
+          cargo fmt --manifest-path examples/external-consumer/Cargo.toml
+      - name: Commit guarded non-force formatting update
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          if git diff --quiet; then
+            echo "Already formatted"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.rs'
+          git commit -m "style: rustfmt semantic diagnostics and external consumer"
+          REMOTE_HEAD="$(git ls-remote origin refs/heads/feat/alloc-no-std-external-consumer-20261121 | awk '{print $1}')"
+          test "$REMOTE_HEAD" = "$EXPECTED_HEAD"
+          git push origin HEAD:refs/heads/feat/alloc-no-std-external-consumer-20261121
