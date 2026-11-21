@@ -238,3 +238,6 @@ impl Surface {
         (node.handler)(control, &payload)
     }
 }
+
+/// Headless FrnlTS semantic runtime with host-provided platform adapters.
+pub mod semantic;
