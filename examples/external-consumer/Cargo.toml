@@ -1,0 +1,8 @@
+[package]
+name = "frnlrs-external-consumer"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+frnlrs = { path = "../..", default-features = false }

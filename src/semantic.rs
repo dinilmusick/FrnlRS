@@ -1,8 +1,13 @@
 //! Portable FrnlTS semantic core. Rendering, I/O, time, and model inference belong to hosts.
 //! All ordered collections and event queues are deterministic for a given command sequence.
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::fmt;
+use alloc::borrow::ToOwned;
+use alloc::boxed::Box;
+use alloc::collections::{BTreeMap, BTreeSet, VecDeque};
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::fmt;
 
 pub type Properties = BTreeMap<String, Data>;
 
@@ -62,7 +67,7 @@ impl fmt::Display for Error {
         write!(f, "{self:?}")
     }
 }
-impl std::error::Error for Error {}
+impl core::error::Error for Error {}
 
 fn nonempty(s: &str) -> Result<(), Error> {
     if s.trim().is_empty() {
