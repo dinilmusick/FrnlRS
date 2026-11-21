@@ -13,16 +13,6 @@ impl Renderer for Console {
 }
 struct ManualClock;
 impl Clock for ManualClock { fn now_ms(&self) -> Result<u64, Error> { Ok(0) } }
-struct Click;
-impl EventSource for Click {
-    fn next_event(&mut self) -> Result<Option<(String, String, Data)>, Error> {
-        Ok(Some(("submit".into(), "click".into(), Data::Null))).and_then(|item| {
-            // A host event source must consume its events exactly once.
-            Ok(item)
-        })
-    }
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut r = Runtime::new();
     let mut state = StateDefinition::default();
